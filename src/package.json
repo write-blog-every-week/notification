@@ -1,0 +1,33 @@
+{
+  "name": "notification",
+  "version": "1.0.0",
+  "scripts": {
+    "eslint": "eslint --ext .ts ./",
+    "prettier": "prettier ./ --check",
+    "lint": "yarn prettier && yarn eslint",
+    "fix": "yarn prettier --write && yarn eslint --fix"
+  },
+  "dependencies": {
+    "@aws-sdk/client-api-gateway": "^3.427.0",
+    "@aws-sdk/client-dynamodb": "^3.427.0",
+    "@aws-sdk/lib-dynamodb": "^3.427.0",
+    "axios": "^1.5.1",
+    "date-fns": "^2.30.0",
+    "esbuild": "^0.19.4",
+    "humps": "^2.0.1",
+    "rss-parser": "^3.13.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.124",
+    "@types/humps": "^2.0.4",
+    "@types/node": "^20.8.2",
+    "@typescript-eslint/eslint-plugin": "^6.7.4",
+    "@typescript-eslint/parser": "^6.7.4",
+    "eslint": "^8.50.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-import": "^2.28.1",
+    "eslint-plugin-unused-imports": "^3.0.0",
+    "prettier": "^3.0.3",
+    "typescript": "^5.2.2"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "extends": ["eslint:recommended", "prettier"],
+  "plugins": ["@typescript-eslint", "import", "unused-imports"],
+  "ignorePatterns": ["node_modules"],
+  "rules": {
+    "@typescript-eslint/no-unused-vars": "off",
+    "unused-imports/no-unused-imports": "warn",
+    "max-lines": [
+      "error",
+      {
+        "max": 500
+      }
+    ],
+    "no-console": "off",
+    "no-unused-vars": "off",
+    "sort-imports": "off",
+    "import/order": [
+      "error",
+      {
+        "alphabetize": {
+          "order": "asc"
+        }
+      }
+    ]
+  },
+  "env": {
+    "node": true
+  }
+}
