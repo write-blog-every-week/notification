@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: write-blog-every-week-notification
+
+Parameters:
+  MaxBlogQuota:
+    Type: Number
+  DynamoDbTableName:
+    Type: String
+  SlackApiUrl:
+    Type: String
+  SlackChannelName:
+    Type: String
+  SlackToken:
+    Type: String
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 256
+    CodeUri: ./src
+    Runtime: nodejs18.x
+    Architectures:
+      - arm64
+    Environment:
+      Variables:
+        TZ: Asia/Tokyo
+        MAX_BLOG_QUOTA: !Ref MaxBlogQuota
+        DYNAMO_DB_TABLE_NAME: !Ref DynamoDbTableName
+        SLACK_API_URL: !Ref SlackApiUrl
+        SLACK_CHANNEL_NAME: !Ref SlackChannelName
+
+Resources:
+  BlogRemindFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.blogRemindHandler
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - CloudWatchFullAccess
+        - CloudWatchLogsFullAccess
+      Events:
+        BlogRemindSchedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 06 ? * WED,FRI,SUN *)
+            Enabled: true
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        EntryPoints:
+          - index.ts
+
+  BlogResultFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.blogResultHandler
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - CloudWatchFullAccess
+        - CloudWatchLogsFullAccess
+      Events:
+        BlogResultSchedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 15 ? * SUN *)
+            Enabled: true
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        EntryPoints:
+          - index.ts
+
+  BlogRegisterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.blogRegisterHandler
+      Policies:
+        - AmazonAPIGatewayAdministrator
+        - AmazonDynamoDBFullAccess
+        - CloudWatchFullAccess
+        - CloudWatchLogsFullAccess
+      Events:
+        BlogRegisterApi:
+          Type: Api
+          Properties:
+            Path: /register
+            Method: POST
+      Environment:
+        Variables:
+          SLACK_TOKEN: !Ref SlackToken
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        EntryPoints:
+          - index.ts
+
+Outputs:
+  BlogRegisterApi:
+    Description: "API Gateway endpoint URL for Prod stage for BlogRegister function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/register"

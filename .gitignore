@@ -1,0 +1,5 @@
+src/node_modules/
+.aws-sam/
+.env
+samconfig.toml
+src/yarn-error.log
