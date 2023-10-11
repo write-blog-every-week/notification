@@ -1,4 +1,4 @@
-import { isAfter, isEqual } from "date-fns";
+import { DateTime } from "luxon";
 import Parser, { Item } from "rss-parser";
 import { BlogCount, MemberData } from "./type";
 
@@ -9,18 +9,14 @@ const parser = new Parser();
  * ブログを書いていないユーザーを取得する
  * @param users
  * @param targetMonday
- * @returns カウントがマイナスのユーザーはブログフィードを取得できなかったエラーデータ
  */
-export const fetchTargetUserList = async (users: MemberData[], targetMonday: Date): Promise<BlogCount[]> => {
+export const fetchTargetUserList = async (users: MemberData[], targetMonday: DateTime): Promise<BlogCount[]> => {
   const result: BlogCount[] = [];
   for (let user of users) {
-    let requiredCount = -1;
     const output = await parse(user.feedUrl);
-    requiredCount = calcRequiredCount(user.requireCount, targetMonday, output);
-
     result.push({
       userId: user.userId,
-      requireCount: requiredCount,
+      requireCount: calcRequireCount(user.requireCount, targetMonday, output),
     });
   }
   return result;
@@ -34,11 +30,18 @@ const parse = async (feedUrlOrXml: string) => {
   return await parser.parseURL(feedUrlOrXml);
 };
 
-const calcRequiredCount = (requiredCount: number, targetMonday: Date, output: Parser.Output<Item>) => {
+/**
+ * 必要記事数を計算する
+ * @param requireCount
+ * @param targetMonday
+ * @param output
+ */
+const calcRequireCount = (requireCount: number, targetMonday: DateTime, output: Parser.Output<Item>) => {
   let result = 0;
-  for (let i = 0; i < requiredCount; i++) {
+  for (let i = 0; i < requireCount; i++) {
     const latestPublishedDate = getLatestFeedPubDate(output, i, targetMonday);
-    if (isEqual(targetMonday, latestPublishedDate) || isAfter(targetMonday, latestPublishedDate)) {
+    if (targetMonday > latestPublishedDate) {
+      // 対象の月曜日以前の日付の場合は今週書いていないのでカウントが増える
       result++;
     }
   }
@@ -49,14 +52,29 @@ const calcRequiredCount = (requiredCount: number, targetMonday: Date, output: Pa
 /**
  * 最新フィードの公開日を取得する
  */
-const getLatestFeedPubDate = (output: Parser.Output<Item>, requiredCount: number, targetMonday: Date) => {
-  if (!output.items || output.items.length < requiredCount + 1) {
+const getLatestFeedPubDate = (output: Parser.Output<Item>, requireCount: number, targetMonday: DateTime) => {
+  if (!output.items || output.items.length < requireCount + 1) {
     // そもそも記事数が足りない場合は公開日を取得できないのでlatestは、必ず通知対象となる今週の月曜日と合わせる
     return targetMonday;
   }
-  const pubDate = output.items[requiredCount].pubDate;
+
+  const pubDate = output.items[requireCount].pubDate;
   if (!pubDate) {
     return targetMonday;
   }
-  return new Date(pubDate);
+
+  let formatDateTime = DateTime.fromRFC2822(pubDate, {
+    zone: 'Asia/Tokyo',
+    locale: 'ja'
+  })
+
+  if (!formatDateTime.isValid) {
+    // pubDateのフォーマットによってはDateTimeに変換できない可能性があるので2段階でformatする
+    formatDateTime = DateTime.fromISO(pubDate, {
+      zone: 'Asia/Tokyo',
+      locale: 'ja'
+    })
+  }
+
+  return formatDateTime;
 };

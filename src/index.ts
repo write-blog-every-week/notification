@@ -1,6 +1,6 @@
 import { APIGatewayEvent, APIGatewayProxyResult } from "aws-lambda";
 import { createMember, findMember, findMembers, refreshRequireCount } from "./database";
-import { getPreviousMonday } from "./date";
+import { getLastWeekMonday, getThisWeekMonday } from "./date";
 import { makeReminderSendText, makeResultSendText } from "./message";
 import { parseParams } from "./query";
 import { fetchTargetUserList } from "./rss";
@@ -12,7 +12,7 @@ export const blogRemindHandler = async (): Promise<any> => {
   let message = "Send Complete.";
 
   try {
-    const targetMonday = getPreviousMonday();
+    const targetMonday = getThisWeekMonday();
     const members = await findMembers();
     const targetMembers = await fetchTargetUserList(members, targetMonday);
     await send(makeReminderSendText(targetMembers.filter((member) => member.requireCount >= 1)));
@@ -32,7 +32,7 @@ export const blogResultHandler = async (): Promise<any> => {
   let message = "Send Complete.";
 
   try {
-    const targetMonday = getPreviousMonday();
+    const targetMonday = getLastWeekMonday();
     const members = await findMembers();
     const targetMembers = await fetchTargetUserList(members, targetMonday);
 
