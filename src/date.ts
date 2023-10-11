@@ -1,7 +1,17 @@
-import { previousMonday } from "date-fns";
+import { DateTime } from "luxon";
 
 /**
- * 前の月曜の日付を取得する
+ * 今週の月曜の日付を取得する
  * @param date
  */
-export const getPreviousMonday = (date = new Date()) => previousMonday(date);
+export const getThisWeekMonday = (date = DateTime.now()) => {
+  return date.setZone("Asia/Tokyo").setLocale("ja").startOf("week").startOf("day");
+};
+
+/**
+ * 先週の月曜の日付を取得する
+ * @param date
+ */
+export const getLastWeekMonday = (date = DateTime.now()) => {
+  return date.setZone("Asia/Tokyo").setLocale("ja").minus({ hours: 1 }).startOf("week").startOf("day");
+};

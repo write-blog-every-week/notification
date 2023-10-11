@@ -24,7 +24,6 @@ Globals:
       - arm64
     Environment:
       Variables:
-        TZ: Asia/Tokyo
         MAX_BLOG_QUOTA: !Ref MaxBlogQuota
         DYNAMO_DB_TABLE_NAME: !Ref DynamoDbTableName
         SLACK_API_URL: !Ref SlackApiUrl
