@@ -38,7 +38,7 @@ export const blogResultHandler = async (): Promise<any> => {
 
     targetMembers.map((member) => {
       // 必要記事数を増やしてデータ保存(0の人は1になり、1以上の人は1記事増える)
-      refreshRequireCount(member.userId, member.requireCount++);
+      refreshRequireCount(member.userId, ++member.requireCount);
     });
 
     await send(makeResultSendText(targetMembers));
